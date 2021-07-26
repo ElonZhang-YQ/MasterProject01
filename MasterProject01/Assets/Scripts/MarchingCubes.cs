@@ -11,7 +11,7 @@ namespace MarchingCubesProject
 
         private Vector3[] EdgeVertex { get; set; }
 
-        public MarchingCubes(float surface = 0.5f) : base(surface)
+        public MarchingCubes(float surface = 0.1f) : base(surface)
         {
             EdgeVertex = new Vector3[12];
         }

@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections.Generic;
 using System.Collections;
 using System;
@@ -15,10 +15,10 @@ namespace MarchingCubesProject
         public Material m_material;
         //public Material transparent_material;
 
-        public int seed = 0;
-
         List<GameObject> meshes = new List<GameObject>();
+
         public GameObject currentGameObject;
+
         public float alpha = 10f;
 
         void Start()
@@ -48,7 +48,7 @@ namespace MarchingCubesProject
 
             BinaryReader br = new BinaryReader(new FileStream(filePath, FileMode.Open));
 
-            // the nii file head is 348B
+            // the head of nii file is 348B, ignore head info
             br.ReadBytes(348);
 
             for (int w = 0; w < width; ++w)
@@ -57,29 +57,30 @@ namespace MarchingCubesProject
                 {
                     for (int d = 0; d < depth; ++d)
                     {
-                        voxels[w*384*384+ h*384+ d] = br.ReadSingle();
+                        imageArray[w, h, d] = br.ReadSingle();
                     }
                 }
             }
             br.Close();
-            for (int w = 0; w < width; ++w)
-            {
-                for (int h = 0; h < height; ++h)
-                {
-                    for (int d = 0; d < depth; ++d)
-                    {
-                        if (voxels[w*384*384+ h*384+ d] > 50 || voxels[w*384*384+ h*384+ d] < 30)
-                        {
-                            voxels[w*384*384+ h*384+ d] = 0;
-                        }
+            // TODO describe why should be convert
+            convert2Voxel(voxels, imageArray, width, height, depth);
+            
+            // for (int w = 0; w < width; ++w)
+            // {
+            //     for (int h = 0; h < height; ++h)
+            //     {
+            //         for (int d = 0; d < depth; ++d)
+            //         {
+            //             if (voxels[w*384*384+ h*384+ d] > 50 || voxels[w*384*384+ h*384+ d] < 30)
+            //             {
+            //                 voxels[w*384*384+ h*384+ d] = 0;
+            //             }
 
 
-                    }
-                }
-            }
+            //         }
+            //     }
+            // }
             currentGameObject = gameObject;
-            //INoise perlin = new PerlinNoise(seed, 2.0f);
-            //FractalNoise fractal = new FractalNoise(perlin, 3, 1.0f);
 
             //Set the mode used to create the mesh.
             //Cubes is faster and creates less verts, tetrahedrons is slower and creates more verts but better represents the mesh surface.
@@ -88,7 +89,7 @@ namespace MarchingCubesProject
             //Surface is the value that represents the surface of mesh
             //For example the perlin noise has a range of -1 to 1 so the mid point is where we want the surface to cut through.
             //The target value does not have to be the mid point it can be any value with in the range.
-            marching.Surface = 0.0f;
+            marching.Surface = 0.5f;
 
             List<Vector3> verts = new List<Vector3>();
             List<int> indices = new List<int>();
@@ -100,10 +101,9 @@ namespace MarchingCubesProject
             //A mesh in unity can only be made up of 65000 verts.
             //Need to split the verts between multiple meshes.
 
-            int maxVertsPerMesh = 60000; //must be divisible by 3, ie 3 verts == 1 triangle
+            int maxVertsPerMesh = 65001; //must be divisible by 3, ie 3 verts == 1 triangle
             int numMeshes = verts.Count / maxVertsPerMesh + 1;
-            Debug.Log(verts);
-            Debug.Log(indices);
+            Debug.Log(verts.Count);
 
             for (int i = 0; i < numMeshes; i++)
             {
@@ -158,6 +158,21 @@ namespace MarchingCubesProject
         private int getIntLength(uint uLength) {
 
             return Convert.ToInt32(uLength);
+        }
+
+        private void convert2Voxel(float[] voxels, float[,,] imageArray, int width, int height, int depth)
+        {
+            for (int w = 0; w < width; w++)
+            {
+                for (int h = 0; h < height; h++)
+                {
+                    for (int d = 0; d < depth; d++)
+                    {
+                        voxels[w * height * depth + h * depth + d] = imageArray[w, h, d];
+                    }
+                }
+            }
+            
         }
     }
 }
