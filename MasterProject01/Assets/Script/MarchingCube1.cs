@@ -122,6 +122,7 @@ public static class Points
         get { return C.Position + new Vector3(0.5f, 0f, 1f); }
     }
     public static Vector3 ge
+    
     {
         get { return C.Position + new Vector3(0f, 0.5f, 1f); }
     }
@@ -174,54 +175,6 @@ public static class Bits1
     public static int F = (int)Mathf.Pow(2, 5);
     public static int G = (int)Mathf.Pow(2, 6);
     public static int H = (int)Mathf.Pow(2, 7);
-
-    public static string BinaryForm(int config)
-    {
-        string A = ((config & (1 << 0)) != 0) ? "A" : "-";
-        string B = ((config & (1 << 1)) != 0) ? "B" : "-";
-        string C = ((config & (1 << 2)) != 0) ? "C" : "-";
-        string D = ((config & (1 << 3)) != 0) ? "D" : "-";
-        string E = ((config & (1 << 4)) != 0) ? "E" : "-";
-        string F = ((config & (1 << 5)) != 0) ? "F" : "-";
-        string G = ((config & (1 << 6)) != 0) ? "G" : "-";
-        string H = ((config & (1 << 7)) != 0) ? "H" : "-";
-
-        return H + G + F + E + D + C + B + A;
-    }
-    public static bool isBitSet(int config, string letter)
-    {
-        bool ret = false;
-
-        switch (letter)
-        {
-            case "A":
-                ret = ((config & (1 << 0)) != 0);
-                break;
-            case "B":
-                ret = ((config & (1 << 1)) != 0);
-                break;
-            case "C":
-                ret = ((config & (1 << 2)) != 0);
-                break;
-            case "D":
-                ret = ((config & (1 << 3)) != 0);
-                break;
-            case "E":
-                ret = ((config & (1 << 4)) != 0);
-                break;
-            case "F":
-                ret = ((config & (1 << 5)) != 0);
-                break;
-            case "G":
-                ret = ((config & (1 << 6)) != 0);
-                break;
-            case "H":
-                ret = ((config & (1 << 7)) != 0);
-                break;
-        }
-
-        return ret;
-    }
 }
 public static class UVCood1
 {
@@ -280,33 +233,7 @@ public class MarchingCube
             }
         }
     }
-    public static int SetCubeToConfig(Vector3 p)
-    {
-        int x = (int)p.x;
-        int y = (int)p.y;
-        int z = (int)p.z;
-
-        try
-        {
-            Points.A = grd[x, y + 1, z];
-            Points.B = grd[x + 1, y + 1, z];
-            Points.C = grd[x, y, z];
-            Points.D = grd[x + 1, y, z];
-            Points.E = grd[x, y + 1, z + 1];
-            Points.F = grd[x + 1, y + 1, z + 1];
-            Points.G = grd[x, y, z + 1];
-            Points.H = grd[x + 1, y, z + 1];
-        }
-        catch (System.Exception ex)
-        {
-            Debug.LogException(ex);
-        }
-
-        int config = GetCubeConfig();
-        IsoFaces(config);
-
-        return config;
-    }
+    
     public static int GetCubeConfig()
     {
         // config code based on current cube on points
@@ -4018,19 +3945,9 @@ public class MarchingCube
                 triangles.Add(vertices.Count - 3);
                 triangles.Add(vertices.Count - 2);
                 triangles.Add(vertices.Count - 1);
-                if (uvAlternate == true)
-                {
-                    uv.Add(UVCood1.A);
-                    uv.Add(UVCood1.D);
-                    uv.Add(UVCood1.C);
-                }
-                else
-                {
-                    uv.Add(UVCood1.A);
-                    uv.Add(UVCood1.B);
-                    uv.Add(UVCood1.C);
-                }
-
+                uv.Add(UVCood1.A);
+                uv.Add(UVCood1.D);
+                uv.Add(UVCood1.C);
                 break;
             case 6:     // 2 triangle
                 triangles.Add(vertices.Count - 6);
@@ -4879,18 +4796,7 @@ public class MarchingCube
 
         return addedCount;
     }
-    public static void SetCubeConfig(int config)
-    {
-        //cube corners on off based on config code
-        Points.A.On = Bits1.isBitSet(config, "A");
-        Points.B.On = Bits1.isBitSet(config, "B");
-        Points.C.On = Bits1.isBitSet(config, "C");
-        Points.D.On = Bits1.isBitSet(config, "D");
-        Points.E.On = Bits1.isBitSet(config, "E");
-        Points.F.On = Bits1.isBitSet(config, "F");
-        Points.G.On = Bits1.isBitSet(config, "G");
-        Points.H.On = Bits1.isBitSet(config, "H");
-    }
+    
     public static Mesh GetMesh(ref GameObject go, ref Material material)
     {
         Mesh mesh = null;
@@ -4944,23 +4850,6 @@ public class MarchingCube
 
         mesh.RecalculateBounds();
         mesh.RecalculateNormals();
-    }
-    public static float PerlinNoise3D(float x, float y, float z)
-    {
-        // use unity's PerlinNoise 2D
-        // youtube video time 0:25sec = https://www.youtube.com/watch?v=TZFv493D7jo&t=25s  
-        // youtube video time 0:20sec = https://www.youtube.com/watch?v=Aga0TBJkchM
-
-        float AB = Mathf.PerlinNoise(x, y);         // get all three(3) permutations of noise for x,y and z
-        float BC = Mathf.PerlinNoise(y, z);
-        float AC = Mathf.PerlinNoise(x, z);
-
-        float BA = Mathf.PerlinNoise(y, x);         // and their reverses
-        float CB = Mathf.PerlinNoise(z, y);
-        float CA = Mathf.PerlinNoise(z, x);
-
-        float ABC = AB + BC + AC + BA + CB + CA;    // and return the average
-        return ABC / 6f;
     }
 
 }
